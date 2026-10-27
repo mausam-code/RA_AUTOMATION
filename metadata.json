@@ -1,0 +1,8 @@
+{
+  "name": "Remix DFFEMS Recruitment \u0026 Manpower Lifecycle Automation",
+  "description": "End-to-end foreign employment \u0026 manpower agency operations suite with OCR passport intake, DFFEMS integration, WhatsApp alerts, flight tracking, and internal auditing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

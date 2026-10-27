@@ -1,0 +1,412 @@
+================================================================================
+DFFEMS RECRUITMENT & MANPOWER LIFECYCLE AUTOMATION SYSTEM
+STEP-BY-STEP BUILD AND RUN GUIDE & PROJECT ARCHITECTURE
+================================================================================
+
+TABLE OF CONTENTS:
+1. Is the Web and Mobile App project in the same directory?
+2. System Requirements & Prerequisites
+3. Step-by-Step Installation & Development Run
+4. Step-by-Step Production Build & Deployment
+5. Environment Variables & API Key Configuration
+6. Web Hub vs. Mobile Staff Companion App
+7. Mobile APK / Native App Generation (Optional via Capacitor)
+8. Feature Testing & Verification Guide
+9. DFFEMS Live API Gateway Replacement Guide
+10. Project Directory & File Structure Reference
+
+--------------------------------------------------------------------------------
+1. IS THE WEB AND MOBILE APP PROJECT IN THE SAME DIRECTORY?
+--------------------------------------------------------------------------------
+YES. Both the Desktop Web Operations Hub and the Mobile Staff App Companion 
+are housed together in this SINGLE unified codebase (directory).
+
+Benefits of this unified architecture:
+- Shared Business Logic: Both Web and Mobile use the exact same state,
+  types, OCR parsers, DFFEMS API Gateway, WhatsApp automation engine, and 
+  accounting calculation modules.
+- Instant View Switcher: On the top navigation bar, you can click "Web Hub" 
+  for the full enterprise desktop operations screen or "Mobile App" for the 
+  optimized mobile field operator view with bottom navigation.
+- Responsive & Adaptive: If accessed on a smartphone or tablet screen, the
+  interface automatically adapts to touch targets (>= 44px).
+- Zero Duplicate Code: You don't have to maintain two separate codebases or 
+  sync data across two different repositories.
+
+--------------------------------------------------------------------------------
+2. SYSTEM REQUIREMENTS & PREREQUISITES
+--------------------------------------------------------------------------------
+Before building and running the project, make sure you have:
+- Node.js: Version 18.0.0 or higher (Node 20+ LTS recommended)
+- Package Manager: npm (v9+), pnpm, or bun
+- Modern Web Browser: Google Chrome, Microsoft Edge, Safari, or Firefox
+- Operating System: Windows, macOS, or Linux
+
+Verify your Node.js and npm versions in terminal:
+  node -v
+  npm -v
+
+--------------------------------------------------------------------------------
+3. STEP-BY-STEP INSTALLATION & DEVELOPMENT RUN
+--------------------------------------------------------------------------------
+Follow these exact steps from the project root directory:
+
+STEP 1: Open Terminal / Command Prompt
+  Navigate to the project root directory where package.json is located:
+  cd /path/to/project
+
+STEP 2: Install Project Dependencies
+  Run the npm install command to install all required packages:
+  npm install
+
+  Installed key dependencies include:
+  - react & react-dom (React 19 SPA framework)
+  - vite & @vitejs/plugin-react (ultra-fast build and dev server)
+  - tailwindcss & @tailwindcss/vite (responsive styling)
+  - lucide-react (icons for navigation, WhatsApp, OCR, auditing)
+  - xlsx (SheetJS engine for generating real .xlsx spreadsheets)
+  - @google/genai (Gemini Vision AI for biometric OCR parsing)
+
+STEP 3: Start the Development Server
+  Run the local development server:
+  npm run dev
+
+  The console will output:
+  VITE v8.x.x  ready in ~200 ms
+  ➜  Local:   http://localhost:3000/
+  ➜  Network: http://0.0.0.0:3000/
+
+STEP 4: Open in Your Browser
+  Open your web browser and navigate to:
+  http://localhost:3000/
+
+--------------------------------------------------------------------------------
+4. STEP-BY-STEP PRODUCTION BUILD & DEPLOYMENT
+--------------------------------------------------------------------------------
+To compile an optimized, minified production build:
+
+STEP 1: Run the Production Build Command
+  npm run build
+
+  This will run Vite's production bundler and create a `/dist` directory 
+  containing minified JavaScript, CSS, HTML, and assets ready for static 
+  hosting (e.g., Cloud Run, Vercel, Netlify, Nginx, AWS S3 / CloudFront).
+
+STEP 2: Preview the Production Build Locally
+  npm run preview
+
+  This runs a local production HTTP server to verify the production bundle 
+  before pushing to live deployment.
+
+STEP 3: Type Checking & Linting
+  To verify TypeScript syntax and types without emitting files:
+  npm run lint
+
+--------------------------------------------------------------------------------
+5. ENVIRONMENT VARIABLES & API KEY CONFIGURATION
+--------------------------------------------------------------------------------
+The project includes a `/.env.example` file.
+
+To configure custom environment variables:
+1. Create a local `.env` file in the root directory:
+   cp .env.example .env
+
+2. Available environment variables:
+   - GEMINI_API_KEY: Optional. If provided, the OCR engine uses Gemini 3.8 Flash 
+     Vision to extract passport and ID details. If not provided, the system 
+     uses the built-in ICAO 9303 Doc 9303 MRZ scanner and smart pattern matcher.
+   - VITE_DFFEMS_BASE_URL: Base URL for the government DFFEMS gateway. Defaults 
+     to https://api.dffems.gov.np/v2/agency-gateway (mock sandbox enabled).
+
+--------------------------------------------------------------------------------
+6. WEB HUB VS. MOBILE STAFF COMPANION APP
+--------------------------------------------------------------------------------
+HOW TO SWITCH VIEWS:
+- On Desktop / Laptop:
+  Click the "Web Hub" or "Mobile App" toggle button located in the top-right 
+  header next to the active lot selector.
+- On Smartphones / Tablets:
+  The application automatically presents touch-friendly mobile layouts with 
+  a bottom navigation bar.
+
+MOBILE COMPANION FEATURES:
+- Tab 1: Staff WhatsApp Feed (Real-time alerts, 10:00 AM / 05:00 PM summaries, 
+  in-chat "Upload Scan" and "Resubmit" action buttons).
+- Tab 2: Mobile OCR Scanner (Direct device camera capture or photo upload to 
+  extract PP, CTZ, and ND credentials on the field).
+- Tab 3: Candidates Pipeline (Quick field lookup for medical and flight statuses).
+
+--------------------------------------------------------------------------------
+7. MOBILE APK / NATIVE APP GENERATION (OPTIONAL VIA CAPACITOR)
+--------------------------------------------------------------------------------
+Because the web and mobile apps are in the same directory, you can easily 
+package this web project as a native Android APK or iOS App using Capacitor:
+
+STEP 1: Install Capacitor CLI & Core
+  npm install @capacitor/core @capacitor/cli @capacitor/android
+
+STEP 2: Initialize Capacitor
+  npx cap init "DFFEMS Recruitment" "com.dffems.recruitment.app" --web-dir dist
+
+STEP 3: Build the Web App
+  npm run build
+
+STEP 4: Add Android Platform
+  npx cap add android
+
+STEP 5: Open in Android Studio & Build APK
+  npx cap open android
+  (In Android Studio, click "Build" -> "Build Bundle(s) / APK(s)" -> "Build APK(s)").
+
+--------------------------------------------------------------------------------
+8. FEATURE TESTING & VERIFICATION GUIDE
+--------------------------------------------------------------------------------
+Once the app is running on http://localhost:3000/:
+
+1. STAGE 1: RAW INTAKE & OCR SCANNER
+   - Click "Load Real Passport Samples" (e.g. Bikash Thapa or Santosh Yadav) 
+     or upload any passport image.
+   - Watch the OCR engine extract the Passport Number (PP), Citizenship (CTZ), 
+     National ID (ND), and demographics.
+   - Click "Save Candidate" to commit to the lot roster.
+   - Click "Excel Generator (.xlsx)" to download the formatted DFFEMS Excel.
+   - Click "Email Generator & Prompt" to generate an employer submission email.
+
+2. STAGE 2: PRE-PERMISSION & DOFE SUBMISSION
+   - Inspect the predefined Demand Letter, Power of Attorney (POA), and 
+     Guarantee Letter.
+   - Click "Submit Pre-Permission to DFFEMS" to dispatch a mock API call.
+   - Click "Confirm Approved Status".
+
+3. STAGE 3: NEWSPAPER AD & VENUE SETUP
+   - Fill in National Daily name, publication date, clipping ref, and venue.
+   - Click "Trigger 10:00 AM WhatsApp Dispatch Now" to send the morning lineup.
+   - Click "Trigger 05:00 PM WhatsApp Dispatch Now" to send the closing summary.
+
+4. STAGE 4: DFFEMS INTERVIEW & VSA SELECTION
+   - Click "Upload Excel to DFFEMS" to batch-register uncreated users and sync 
+     interview entries.
+   - Click "Select for VSA & Manage List", choose the management adviser, and 
+     enroll into the Manage Candidate List.
+
+5. STAGE 5: MEDICAL, ORIENTATION & DEDUPLICATED ANNUAL RECORDS
+   - Filter candidates by "Resubmission Required" or "N/A & Pending".
+   - Click "Resubmit & Alert WhatsApp" to resolve flagged documents.
+   - Click "Export Annual Approved Excel" to export deduplicated records for 
+     Fiscal Year 2026/2027.
+
+6. STAGE 6: FLIGHT SCHEDULING & TICKETING
+   - Click "Ask for Ticketing Date in Staff WhatsApp Group" (Daily prompt).
+   - Click "Dispatch Weekly Flight Report to Management" (Weekly audit).
+   - Enter airline, flight date, and PNR in the Flight Schedule Form.
+   - Click "Send Flight Records to Accounting via WhatsApp".
+
+7. STAGE 7: AUDITING & ACCOUNTING
+   - Edit candidate office charges and paid amounts in the ledger.
+   - Click "Send Income OTP to Management" -> Click "Verify OTP & View Company Statement".
+   - Add office debits (medical fees, orientation fees, newspaper ads) and view 
+     the running Net Profit balance.
+
+8. WHATSAPP OPERATIONS HUB
+   - Switch between "Staff Operations Group" and "Management Board Group".
+   - Test in-chat action buttons ("Upload Clear Scan", "Enter Flight Details", 
+     "Enter OTP Code").
+
+9. AUDIT LOG & DFFEMS API GATEWAY MODALS
+   - Click "Audit Log" in the header to review which staff member (Intake Officer, 
+     Operations Manager, Marketing Personnel, Accountant) executed each task.
+   - Click "DFFEMS API" in the header to inspect outbound JSON payloads.
+
+--------------------------------------------------------------------------------
+9. DFFEMS LIVE API GATEWAY REPLACEMENT GUIDE
+--------------------------------------------------------------------------------
+All API calls are centralized in `/src/services/dffemsApiService.ts`.
+
+When the government DFFEMS team provides live endpoints:
+1. Open the "DFFEMS API" modal in the top header.
+2. Update the "Base URL" to the live production endpoint.
+3. Switch Environment from `MOCK_SANDBOX` to `PRODUCTION_GATEWAY`.
+4. In `/src/services/dffemsApiService.ts`, replace the `makeGenericResponse()` 
+   calls with real `fetch()` or `axios()` requests using your live API key.
+
+--------------------------------------------------------------------------------
+10. PROJECT DIRECTORY & FILE STRUCTURE REFERENCE
+--------------------------------------------------------------------------------
+/
+├── BUILD_AND_RUN_GUIDE.txt     <-- This file
+├── index.html                  <-- Main HTML entry point
+├── metadata.json               <-- Applet configuration & permissions
+├── package.json                <-- Dependencies & npm scripts
+├── tsconfig.json               <-- TypeScript configuration
+├── vite.config.ts              <-- Vite build configuration
+├── src/
+│   ├── main.tsx                <-- React application entry point
+│   ├── index.css               <-- Tailwind CSS imports & global styles
+│   ├── App.tsx                 <-- Main application coordinator & modal router
+│   ├── types/
+│   │   └── index.ts            <-- TypeScript data types & schemas
+│   ├── context/
+│   │   └── AppContext.tsx      <-- Global state, persistence & action handlers
+│   ├── mock/
+│   │   └── initialData.ts      <-- Initial overseas lots, candidates & expenses
+│   ├── services/
+│   │   ├── ocrService.ts       <-- Biometric OCR & MRZ passport parser
+│   │   ├── docGenerators.ts    <-- Excel (.xlsx), CV & email prompt generators
+│   │   └── dffemsApiService.ts <-- DFFEMS API Gateway & mock responses
+│   └── components/
+│       ├── Header.tsx                 <-- Top navigation & staff switcher
+│       ├── StageNavigation.tsx        <-- Workflow tabs (Stages 1-7)
+│       ├── RawCompaniesIntake.tsx     <-- Stage 1: Intake & OCR Scanner
+│       ├── PrePermissionStage.tsx     <-- Stage 2: Pre-permission DoFE submission
+│       ├── ApprovedPrePermissionStage.tsx <-- Stage 3: Ad, venue & 10am/5pm alerts
+│       ├── InterviewDffemsStage.tsx   <-- Stage 4: DFFEMS sync & VSA selection
+│       ├── ManageListStage.tsx        <-- Stage 5: Medical, orientation & annual Excel
+│       ├── TicketingStage.tsx         <-- Stage 6: Flight entry & ticketing reminders
+│       ├── AuditingAccountingStage.tsx<-- Stage 7: Office charges, OTP & ledger
+│       ├── WhatsAppHub.tsx            <-- Interactive WhatsApp dual-channel hub
+│       ├── MobileCompanionView.tsx    <-- Mobile staff companion application
+│       ├── CvPreviewModal.tsx         <-- Overseas CV preview & print modal
+│       ├── EmailGeneratorModal.tsx    <-- Email generator & prompt modal
+│       ├── AuditLogModal.tsx          <-- Management traceable audit log modal
+│       └── DffemsApiGatewayModal.tsx  <-- DFFEMS payload inspector & config modal
+================================================================================
+
+
+================================================================================
+11. POSTGRESQL DATABASE SETUP & CONNECTION GUIDE
+================================================================================
+The project includes a ready-to-run PostgreSQL production schema in:
+`/database/schema.sql`
+
+A. RUN POSTGRESQL LOCALLY VIA DOCKER (RECOMMENDED):
+   Run the included docker-compose.yml:
+   docker compose up -d postgres
+
+   This automatically boots PostgreSQL 16 on port 5432 and imports schema.sql.
+   - Database Name: dffems_agency
+   - Username: agency_admin
+   - Password: SecretPostgresPassword2026!
+   - Port: 5432
+
+B. IMPORT TO AN EXISTING POSTGRESQL SERVER:
+   psql -U your_postgres_user -d dffems_agency -f database/schema.sql
+
+C. CLOUD POSTGRESQL (SUPABASE / NEON / GCP CLOUD SQL):
+   1. Create a new PostgreSQL project on Supabase (https://supabase.com) or Neon.
+   2. Open the SQL Editor in your cloud dashboard.
+   3. Copy and run the contents of `/database/schema.sql`.
+   4. Set your DATABASE_URL in your server .env file:
+      DATABASE_URL="postgres://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
+
+================================================================================
+12. RUNNING IN PRODUCTION LOCALLY ON AN INTERNAL NETWORK SERVER (LAN)
+================================================================================
+To host this system on a physical desktop PC or on-premise server in your office:
+
+STEP 1: ASSIGN A STATIC LOCAL IP
+- In your office router or server OS network settings, assign a static IP.
+  Example: 192.168.1.150
+
+STEP 2: LAUNCH PRODUCTION CONTAINERS
+- From the project root directory, run:
+  docker compose up -d
+
+  This spins up:
+  - postgres: PostgreSQL 16 database with persistent storage.
+  - backend: Node.js API with JWT authentication and role validation.
+  - web: High-performance Nginx web server serving the compiled React frontend.
+
+STEP 3: ACCESS ACROSS THE OFFICE
+- Any employee connected to office Wi-Fi / LAN opens:
+  http://192.168.1.150
+- Or configure a local DNS entry in your router for:
+  http://dffems.agency.local
+
+================================================================================
+13. SYNCING MOBILE APP & ACCESSING FROM ANYWHERE IN THE WORLD (INTERNET)
+================================================================================
+How do mobile field staff scan passports or view candidate statuses from remote
+districts or airports without exposing the internal server to security risks?
+
+METHOD A: CLOUDFLARE ZERO TRUST TUNNEL (EASIEST, 100% FREE & ZERO PORT FORWARDING)
+1. Install cloudflared on your internal server:
+   curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+   sudo dpkg -i cloudflared.deb
+
+2. Authenticate and create a secure tunnel:
+   cloudflared tunnel login
+   cloudflared tunnel create dffems-tunnel
+
+3. Route your custom domain (e.g. app.youragency.com) through the tunnel:
+   cloudflared tunnel route dns dffems-tunnel app.youragency.com
+
+4. Run the tunnel:
+   cloudflared tunnel run --url http://localhost:80 dffems-tunnel
+
+   RESULT:
+   - Your internal server is now securely accessible worldwide at:
+     https://app.youragency.com
+   - No router ports to forward.
+   - Built-in DDoS protection and free automatic SSL certificate.
+
+================================================================================
+14. GOOGLE PLAY STORE DEPLOYMENT FOR ANDROID (CAPACITOR)
+================================================================================
+The mobile app companion (`MobileCompanionView.tsx`) is already part of this unified
+codebase. Follow these steps to package and release it to the Google Play Store:
+
+STEP 1: INSTALL CAPACITOR DEPENDENCIES
+  npm install @capacitor/core @capacitor/cli @capacitor/android
+
+STEP 2: INITIALIZE & ADD ANDROID PLATFORM
+  npx cap add android
+
+STEP 3: COMPILE PRODUCTION WEB BUILD & SYNC
+  npm run build
+  npx cap sync android
+
+STEP 4: GENERATE RELEASE SIGNING KEYSTORE
+  keytool -genkey -v -keystore dffems-release.keystore -alias dffems_key -keyalg RSA -keysize 2048 -validity 10000
+
+STEP 5: BUILD SIGNED ANDROID APP BUNDLE (.AAB)
+  cd android
+  ./gradlew bundleRelease
+
+  Output bundle is generated at:
+  android/app/build/outputs/bundle/release/app-release.aab
+
+STEP 6: GOOGLE PLAY CONSOLE SUBMISSION
+1. Log in to https://play.google.com/console
+2. Create App -> Name: "DFFEMS Field Staff" -> Category: Business
+3. Upload `app-release.aab` to Internal Testing or Production Track.
+4. Complete the App Content questionnaire:
+   - Camera permission: Required for Passport OCR scanning.
+   - Internet permission: Required for syncing records to the office server.
+5. Submit for Google review (typically takes 24-48 hours).
+
+================================================================================
+15. USER ROLE-BASED ACCESS CONTROL (RBAC) MATRIX
+================================================================================
+1. SUPER ADMIN / MANAGING DIRECTOR:
+   - Web: Full control across all overseas lots, DFFEMS API keys, ledger OTP.
+   - Mobile: Executive P&L summaries, WhatsApp management broadcast approval.
+
+2. OPERATIONS MANAGER:
+   - Web: Pre-Permission filing, Newspaper notices, Interview venues, Ticketing.
+   - Mobile: 10:00 AM & 05:00 PM WhatsApp dispatches, interview queue alerts.
+
+3. INTAKE OFFICER (FIELD STAFF):
+   - Web: Passport MRZ parsing, Citizenship/National ID intake, CV Generator.
+   - Mobile: Smartphone camera OCR, candidate lookup, missing scan upload.
+
+4. PRO / GOVERNMENT LIAISON OFFICER:
+   - Web: DFFEMS biometrics tracking, Medical Fit reports, Shram Swikriti.
+   - Mobile: Instant passport status lookup at DOFE / Airport.
+
+5. ACCOUNTANT:
+   - Web: Office charges, OTP verification gate, expense debits, profit & loss.
+   - Mobile: Daily collections feed and payment voucher approvals.
+================================================================================
+
+END OF GUIDE
+================================================================================

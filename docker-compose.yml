@@ -1,0 +1,82 @@
+# ==============================================================================
+# DFFEMS RECRUITMENT & MANPOWER SYSTEM - PRODUCTION DOCKER COMPOSE
+# Deploy on an Internal Network Server (e.g., Ubuntu/Debian/Windows Server)
+# ==============================================================================
+# Usage:
+#   1. Copy this folder to your internal server (e.g. /opt/dffems-system)
+#   2. Run: docker compose up -d
+#   3. Access locally on LAN: http://<server-ip>:80 (or http://dffems.agency.local)
+#   4. For global Internet access via Cloudflare Tunnel:
+#      Run: cloudflared tunnel run dffems-tunnel (maps your public domain to port 80)
+# ==============================================================================
+
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database Service
+  postgres:
+    image: postgres:16-alpine
+    container_name: dffems_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: dffems_agency
+      POSTGRES_USER: agency_admin
+      POSTGRES_PASSWORD: SecretPostgresPassword2026!
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agency_admin -d dffems_agency"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dffems_network
+
+  # 2. Node.js Backend API Service (REST & WebSocket for Web + Mobile Sync)
+  backend:
+    image: node:20-alpine
+    container_name: dffems_api
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: sh -c "npm install && node server.js"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      DATABASE_URL: postgres://agency_admin:SecretPostgresPassword2026!@postgres:5432/dffems_agency
+      JWT_SECRET: super_secure_dffems_jwt_key_nepal_2026
+      CORS_ORIGIN: "*"
+    ports:
+      - "5000:5000"
+    networks:
+      - dffems_network
+
+  # 3. Nginx Web Hub & Reverse Proxy
+  web:
+    image: nginx:alpine
+    container_name: dffems_web
+    restart: always
+    volumes:
+      - ./dist:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - dffems_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  dffems_network:
+    driver: bridge
